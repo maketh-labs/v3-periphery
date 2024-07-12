@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity >=0.7.5;
-pragma abicoder v2;
+pragma solidity ^0.8.26;
 
 /// @title Tick Lens
 /// @notice Provides functions for fetching chunks of tick data for a pool

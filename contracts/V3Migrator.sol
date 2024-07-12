@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity =0.8.15;
-pragma abicoder v2;
+pragma solidity ^0.8.26;
 
 import "@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol";
 

@@ -2,7 +2,7 @@
 // from https://github.com/Uniswap/solidity-lib/blob/master/contracts/libraries/AddressStringUtil.sol
 // modified for solidity 0.8
 
-pragma solidity >=0.8.0;
+pragma solidity ^0.8.26;
 
 library AddressStringUtil {
     // converts an address to the uppercase hex string, extracting only len bytes (up to 20, multiple of 2)

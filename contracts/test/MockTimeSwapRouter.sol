@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity =0.8.15;
-pragma abicoder v2;
+pragma solidity ^0.8.26;
 
 import "../SwapRouter.sol";
 

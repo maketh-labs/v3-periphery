@@ -2,7 +2,7 @@
 // from https://github.com/Uniswap/solidity-lib/blob/master/contracts/libraries/SafeERC20Namer.sol
 // modified for solidity 0.8
 
-pragma solidity >=0.8.0;
+pragma solidity ^0.8.26;
 
 import "./AddressStringUtil.sol";
 
