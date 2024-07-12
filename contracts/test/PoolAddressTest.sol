@@ -10,7 +10,7 @@ contract PoolAddressTest {
 
     function computeAddress(address factory, address token0, address token1, uint24 fee)
         external
-        pure
+        view
         returns (address)
     {
         return PoolAddress.computeAddress(factory, PoolAddress.PoolKey({token0: token0, token1: token1, fee: fee}));
