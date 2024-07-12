@@ -46,6 +46,10 @@ abstract contract ERC721Permit is BlockTimestamp, ERC721Enumerable, IERC721Permi
     bytes32 public constant override PERMIT_TYPEHASH =
         0x49ecf333e5b8c95c40fdafc95c1ad136e8914a8fb55e9dc8bb01eaa83a2df9ad;
 
+    function isContract(address account) internal view returns (bool) {
+        return account.code.length > 0;
+    }
+
     /// @inheritdoc IERC721Permit
     function permit(address spender, uint256 tokenId, uint256 deadline, uint8 v, bytes32 r, bytes32 s)
         external
@@ -64,7 +68,7 @@ abstract contract ERC721Permit is BlockTimestamp, ERC721Enumerable, IERC721Permi
         address owner = ownerOf(tokenId);
         require(spender != owner, "ERC721Permit: approval to current owner");
 
-        if (Address.isContract(owner)) {
+        if (isContract(owner)) {
             require(IERC1271(owner).isValidSignature(digest, abi.encodePacked(r, s, v)) == 0x1626ba7e, "Unauthorized");
         } else {
             address recoveredAddress = ecrecover(digest, v, r, s);
@@ -72,6 +76,16 @@ abstract contract ERC721Permit is BlockTimestamp, ERC721Enumerable, IERC721Permi
             require(recoveredAddress == owner, "Unauthorized");
         }
 
-        _approve(spender, tokenId);
+        _approve(spender, tokenId, address(0));
+    }
+
+    function _exists(uint256 tokenId) internal view virtual returns (bool) {
+        return ownerOf(tokenId) != address(0);
+    }
+
+    function _isApprovedOrOwner(address spender, uint256 tokenId) internal view virtual returns (bool) {
+        require(_exists(tokenId), "ERC721: operator query for nonexistent token");
+        address owner = ERC721.ownerOf(tokenId);
+        return (spender == owner || getApproved(tokenId) == spender || ERC721.isApprovedForAll(owner, spender));
     }
 }
