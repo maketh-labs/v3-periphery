@@ -2,16 +2,16 @@
 pragma solidity =0.8.15;
 pragma abicoder v2;
 
-import '@uniswap/v3-core/contracts/libraries/SafeCast.sol';
-import '@uniswap/v3-core/contracts/libraries/TickMath.sol';
-import '@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol';
-import '@uniswap/v3-core/contracts/interfaces/callback/IUniswapV3SwapCallback.sol';
+import "@uniswap/v3-core/contracts/libraries/SafeCast.sol";
+import "@uniswap/v3-core/contracts/libraries/TickMath.sol";
+import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
+import "@uniswap/v3-core/contracts/interfaces/callback/IUniswapV3SwapCallback.sol";
 
-import '../interfaces/IQuoter.sol';
-import '../base/PeripheryImmutableState.sol';
-import '../libraries/Path.sol';
-import '../libraries/PoolAddress.sol';
-import '../libraries/CallbackValidation.sol';
+import "../interfaces/IQuoter.sol";
+import "../base/PeripheryImmutableState.sol";
+import "../libraries/Path.sol";
+import "../libraries/PoolAddress.sol";
+import "../libraries/CallbackValidation.sol";
 
 /// @title Provides quotes for swaps
 /// @notice Allows getting the expected amount out or amount in for a given swap without executing the swap
@@ -26,20 +26,16 @@ contract Quoter is IQuoter, IUniswapV3SwapCallback, PeripheryImmutableState {
 
     constructor(address _factory, address _WETH9) PeripheryImmutableState(_factory, _WETH9) {}
 
-    function getPool(
-        address tokenA,
-        address tokenB,
-        uint24 fee
-    ) private view returns (IUniswapV3Pool) {
+    function getPool(address tokenA, address tokenB, uint24 fee) private view returns (IUniswapV3Pool) {
         return IUniswapV3Pool(PoolAddress.computeAddress(factory, PoolAddress.getPoolKey(tokenA, tokenB, fee)));
     }
 
     /// @inheritdoc IUniswapV3SwapCallback
-    function uniswapV3SwapCallback(
-        int256 amount0Delta,
-        int256 amount1Delta,
-        bytes memory path
-    ) external view override {
+    function uniswapV3SwapCallback(int256 amount0Delta, int256 amount1Delta, bytes memory path)
+        external
+        view
+        override
+    {
         require(amount0Delta > 0 || amount1Delta > 0); // swaps entirely within 0-liquidity regions are not supported
         (address tokenIn, address tokenOut, uint24 fee) = path.decodeFirstPool();
         CallbackValidation.verifyCallback(factory, tokenIn, tokenOut, fee);
@@ -67,7 +63,7 @@ contract Quoter is IQuoter, IUniswapV3SwapCallback, PeripheryImmutableState {
     /// @dev Parses a revert reason that should contain the numeric quote
     function parseRevertReason(bytes memory reason) private pure returns (uint256) {
         if (reason.length != 32) {
-            if (reason.length < 68) revert('Unexpected error');
+            if (reason.length < 68) revert("Unexpected error");
             assembly {
                 reason := add(reason, 0x04)
             }
@@ -86,17 +82,15 @@ contract Quoter is IQuoter, IUniswapV3SwapCallback, PeripheryImmutableState {
     ) public override returns (uint256 amountOut) {
         bool zeroForOne = tokenIn < tokenOut;
 
-        try
-            getPool(tokenIn, tokenOut, fee).swap(
-                address(this), // address(0) might cause issues with some tokens
-                zeroForOne,
-                amountIn.toInt256(),
-                sqrtPriceLimitX96 == 0
-                    ? (zeroForOne ? TickMath.MIN_SQRT_RATIO + 1 : TickMath.MAX_SQRT_RATIO - 1)
-                    : sqrtPriceLimitX96,
-                abi.encodePacked(tokenIn, fee, tokenOut)
-            )
-        {} catch (bytes memory reason) {
+        try getPool(tokenIn, tokenOut, fee).swap(
+            address(this), // address(0) might cause issues with some tokens
+            zeroForOne,
+            amountIn.toInt256(),
+            sqrtPriceLimitX96 == 0
+                ? (zeroForOne ? TickMath.MIN_SQRT_RATIO + 1 : TickMath.MAX_SQRT_RATIO - 1)
+                : sqrtPriceLimitX96,
+            abi.encodePacked(tokenIn, fee, tokenOut)
+        ) {} catch (bytes memory reason) {
             return parseRevertReason(reason);
         }
     }
@@ -132,17 +126,15 @@ contract Quoter is IQuoter, IUniswapV3SwapCallback, PeripheryImmutableState {
 
         // if no price limit has been specified, cache the output amount for comparison in the swap callback
         if (sqrtPriceLimitX96 == 0) amountOutCached = amountOut;
-        try
-            getPool(tokenIn, tokenOut, fee).swap(
-                address(this), // address(0) might cause issues with some tokens
-                zeroForOne,
-                -amountOut.toInt256(),
-                sqrtPriceLimitX96 == 0
-                    ? (zeroForOne ? TickMath.MIN_SQRT_RATIO + 1 : TickMath.MAX_SQRT_RATIO - 1)
-                    : sqrtPriceLimitX96,
-                abi.encodePacked(tokenOut, fee, tokenIn)
-            )
-        {} catch (bytes memory reason) {
+        try getPool(tokenIn, tokenOut, fee).swap(
+            address(this), // address(0) might cause issues with some tokens
+            zeroForOne,
+            -amountOut.toInt256(),
+            sqrtPriceLimitX96 == 0
+                ? (zeroForOne ? TickMath.MIN_SQRT_RATIO + 1 : TickMath.MAX_SQRT_RATIO - 1)
+                : sqrtPriceLimitX96,
+            abi.encodePacked(tokenOut, fee, tokenIn)
+        ) {} catch (bytes memory reason) {
             if (sqrtPriceLimitX96 == 0) delete amountOutCached; // clear cache
             return parseRevertReason(reason);
         }
