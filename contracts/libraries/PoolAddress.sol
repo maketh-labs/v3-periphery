@@ -5,8 +5,8 @@ import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
 
 /// @title Provides functions for deriving a pool address from the factory, tokens, and the fee
 library PoolAddress {
-    /// @dev POOL_INIT_CODE_HASH for actual deployment, not from 0.8
-    bytes32 internal constant POOL_INIT_CODE_HASH = 0xe34f199b19b2b4f47f68442619d555527d244f78a3297ea89325f843f87b8b54;
+    /// @dev POOL_INIT_CODE_HASH for actual Berachain deployment
+    bytes32 internal constant POOL_INIT_CODE_HASH = 0x280def928d1e4fcdfab8ec1dcf0555e1627b50e72324a850929b5b6ebc1e2e7a;
 
     /// @notice The identifying key of the pool
     struct PoolKey {
@@ -30,22 +30,21 @@ library PoolAddress {
     /// @param key The PoolKey
     /// @return pool The contract address of the V3 pool
     /// TODO: revert to original before deployment
-    function computeAddress(address factory, PoolKey memory key) internal view returns (address pool) {
+    function computeAddress(address factory, PoolKey memory key) internal pure returns (address pool) {
         require(key.token0 < key.token1);
-        pool = IUniswapV3Factory(factory).getPool(key.token0, key.token1, key.fee);
-        //pool = address(
-        //    uint160(
-        //        uint256(
-        //            keccak256(
-        //                abi.encodePacked(
-        //                    hex"ff",
-        //                    factory,
-        //                    keccak256(abi.encode(key.token0, key.token1, key.fee)),
-        //                    POOL_INIT_CODE_HASH
-        //                )
-        //            )
-        //        )
-        //    )
-        //);
+        pool = address(
+           uint160(
+               uint256(
+                   keccak256(
+                       abi.encodePacked(
+                           hex"ff",
+                           factory,
+                           keccak256(abi.encode(key.token0, key.token1, key.fee)),
+                           POOL_INIT_CODE_HASH
+                       )
+                   )
+               )
+           )
+        );
     }
 }
